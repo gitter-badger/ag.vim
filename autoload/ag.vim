@@ -58,6 +58,85 @@ function! ag#AgBuffer(cmd, args)
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
 endfunction
 
+function! ag#AgGroup(ncontext, args)
+  botright new
+  setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+
+  let context = ''
+  if a:ncontext > 0
+    let context = '-C' . a:ncontext 
+  endif
+
+  execute '$read !ag --group --column ' . context . ' '. a:args
+  syn match agLine /^\d\+:\d\+\(:\)\@=/
+  syn match agLineContext /^\d\+-/
+  syn match agFile /^\n.\+$/hs=s+1
+  if hlexists('agSearch')
+    silent syn clear agSearch
+  endif
+  execute 'syn match agSearch /' . a:args . '/'
+  highlight link agLine LineNr
+  highlight link agFile Question
+  highlight link agSearch Todo
+  highlight link agLineContext Constant
+  setlocal foldmethod=expr
+  setlocal foldexpr=FoldAg()
+  setlocal foldcolumn=2
+  1
+  setlocal nomodifiable
+  map <buffer> o za
+  map <buffer> O :call ToggleEntireFold()<CR>
+  map <buffer> <Enter> :call OpenFile()<CR>
+endfunction
+
+function! OpenFile()
+  let curpos = line('.')
+  let poscol = curpos
+  let line = getline(poscol)
+  if empty(line)
+    return
+  endif
+
+  while line !~ '^\d\+:'
+    let poscol = poscol + 1
+    let line = getline(poscol)
+  endwhile
+
+  if line =~ '^\d\+:'
+    let data = split(line,':')
+    let pos = data[0]
+    let col = data[1]
+
+    let filename = getline(curpos - 1)
+    while !empty(filename) && curpos > 1
+      let curpos = curpos - 1
+      let filename = getline(curpos - 1)
+    endwhile
+    let filename = getline(curpos)
+    echo 'split +' . pos . ' ' . filename
+    exe 'split +' . pos . ' ' . filename
+    exe 'normal ' . col . '|'
+  endif
+endfunction
+
+function! ToggleEntireFold()
+  if foldclosed(2) == -1
+    normal zM
+  else
+    normal zR
+  endif
+endfunction
+
+function! FoldAg()
+  let line = getline(v:lnum)
+  if empty(line)
+    return '0'
+  else
+    return '1'
+  endif
+  return '0'
+endfunction
+
 function! ag#Ag(cmd, args)
   let l:ag_executable = get(split(g:ag_prg, " "), 0)
 
