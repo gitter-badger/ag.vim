@@ -52,12 +52,20 @@ if !exists("g:ag_lhandler")
   let g:ag_lhandler="botright lopen"
 endif
 
+if !exists("g:ag_nhandler")
+  let g:ag_nhandler="botright new"
+endif
+
 if !exists("g:ag_mapping_message")
   let g:ag_mapping_message=1
 endif
 
 if !exists("g:ag_working_path_mode")
     let g:ag_working_path_mode = 'c'
+endif
+
+if !exists("g:ag_goto_exact_line")
+  let g:ag_goto_exact_line=0
 endif
 
 function! ag#AgBuffer(cmd, args)
@@ -70,6 +78,255 @@ function! ag#AgBuffer(cmd, args)
     endif
   endfor
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
+endfunction
+
+function! ag#VisualSelection()
+  let selection = ""
+  try
+    let a_save = @a
+    normal! gv"ay
+    let selection = @a
+  finally
+    let @a = a_save
+  endtry
+  return selection
+endfunction
+
+let g:last_aggroup=""
+
+function! ag#AgGroupLast(ncontext)
+  call ag#AgGroup(a:ncontext, 0, '', g:last_aggroup)
+endfunction
+
+function! ag#GetArgs(ncontext, visualmode, args)
+  if !empty(a:args)
+    let l:grepargs = a:args
+  else
+    if a:visualmode
+      let l:grepargs = ag#VisualSelection()
+    else
+      let l:grepargs = ""
+    endif
+    if empty(l:grepargs)
+      let l:grepargs = expand("<cword>")
+      if empty(l:grepargs)
+        let l:grepargs = g:last_aggroup
+      endif
+    else
+      let l:grepargs = '"' . l:grepargs . '"'
+    endif
+  endif
+  return l:grepargs
+endfunction
+
+function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
+  let l:grepargs = ag#GetArgs(a:ncontext, a:visualmode, a:args)
+
+  if empty(l:grepargs)
+     echo "empty search"
+     return
+  endif
+
+  let g:last_aggroup = l:grepargs
+
+  silent! wincmd P
+  if !&previewwindow
+    exe g:ag_nhandler
+    execute  'resize ' . &previewheight
+    set previewwindow
+  endif
+
+  setlocal modifiable
+
+  execute "silent %delete_"
+
+  setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted nowrap
+
+  let context = ''
+  if a:ncontext > 0
+    let context = '-C' . a:ncontext
+  endif
+
+  if empty(a:fileregexp)
+    let fileregexp = ''
+  else
+    let fileregexp = '-G' . a:fileregexp
+  endif
+
+  let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
+  let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
+  "--vimgrep doesn't work well here
+  let ag_prg = 'ag'
+  execute 'silent read !' . ag_prg . ' -S --group --column ' . context . ' ' . fileregexp . ' ' . l:grepargs
+  if !empty(fileregexp) && match(l:grepargs, '\C[A-Z]') == -1
+    "explicit file-filter and search in lower case
+    syn case ignore
+  endif
+
+  syn match agLine /^\d\+:\d\+:/ conceal
+  syn match agLineContext /^\d\+-/ conceal
+  syn match agFile /^\n.\+$/hs=s+1
+  if hlexists('agSearch')
+    silent syn clear agSearch
+  endif
+  if l:grepargs =~ '^"'
+    "detect "find me" file1 file2
+    let l:grepargs = split(l:grepargs, '"')[0]
+  else
+    let l:grepargs = split(l:grepargs, '\s\+')[0]
+  endif
+  let l:grepargs = substitute(l:grepargs, '/', '\\/', 'g')
+  try
+    try
+      execute 'syn match agSearch /' . escape(l:grepargs, "\|()") . '/'
+    catch /^Vim\%((\a\+)\)\=:E54/ " invalid regexp
+        execute 'syn match agSearch /' . l:grepargs . '/'
+    endtry
+  catch
+  endtry
+
+  highlight link agLine LineNr
+  highlight link agFile Question
+  highlight link agSearch Todo
+  highlight link agLineContext Constant
+  setlocal foldmethod=expr
+  setlocal foldexpr=FoldAg()
+  setlocal foldcolumn=2
+  1
+  setlocal nomodifiable
+  noremap <silent> <buffer> o zaj
+  noremap <silent> <buffer> <space> :call NextFold()<CR>
+  noremap <silent> <buffer> O :call ToggleEntireFold()<CR>
+  noremap <silent> <buffer> <Enter> :call OpenFile(0)<CR>
+  noremap <silent> <buffer> s :call OpenFile(1)<CR>
+  noremap <silent> <buffer> S :call OpenFile(2)<CR>
+  noremap <silent> <buffer> d :call DeleteFold()<CR>
+  noremap <silent> <buffer> gl :call ToggleShowLine()<CR>
+endfunction
+
+function ToggleShowLine()
+  if &conceallevel == 0
+    setlocal conceallevel=2
+  else
+    setlocal conceallevel=0
+  endif  
+endfunction
+
+function DeleteFold()
+  if foldlevel(".") == 0
+    return
+  endif
+  setlocal modifiable
+  if foldclosed(".") != -1
+    normal zo
+  endif
+  "normal stops if command fails. On  cursor at beginning of fold motion fails
+  normal! [z
+  normal! kVj]zD
+  setlocal nomodifiable
+endfunction
+
+" Find next fold or go back to first one
+"
+function NextFold()
+  let save_a_mark = getpos("'a")
+  let mark_a_exists = save_a_mark[1] == 0 
+  mark a
+  execute 'normal zMzjzo'
+  if getpos('.')[1] == getpos("'a")[1]
+    "no movement go to first position
+    normal gg
+    execute 'normal zMzjzo'
+  endif  
+  if mark_a_exists
+    call setpos("'a", save_a_mark)
+  else
+    delmark a
+  endif
+endfunction
+
+" Open file for AgGroup selection
+"
+" forceSplit:
+"    0 no
+"    1 horizontal
+"    2 vertical
+"
+function! OpenFile(forceSplit)
+  let curpos = line('.')
+  let line = getline(curpos)
+  if empty(line)
+    return
+  endif
+
+  let increment = 1
+
+  let poscol = curpos
+  while line !~ '^\d\+:'
+    let poscol = poscol + increment
+    let line = getline(poscol)
+
+    if empty(line)
+      if increment == -1
+        echom 'Cannot find filefor match'
+        break
+      else
+        let increment = -1
+      endif
+    endif
+  endwhile
+
+  let offset = curpos - poscol
+
+  if line =~ '^\d\+:'
+    let data = split(line,':')
+    let pos = data[0]
+    if g:ag_goto_exact_line
+      let pos += offset
+    endif
+    let col = data[1]
+
+    let filename = getline(curpos - 1)
+    while !empty(filename) && curpos > 1
+      let curpos = curpos - 1
+      let filename = getline(curpos - 1)
+    endwhile
+    let filename = getline(curpos)
+    let avaliable_windows = map(filter(range(0, bufnr('$')), 'bufwinnr(v:val)>=0 && buflisted(v:val)'), 'bufwinnr(v:val)')
+    let open_command = "edit"
+    if a:forceSplit || empty(avaliable_windows)
+      if a:forceSplit > 1
+        wincmd k
+        let open_command = "vertical leftabove vsplit"
+      else
+        let open_command = "split"
+      endif
+    else
+      let winnr = get(avaliable_windows, 0)
+      exe winnr . "wincmd w"
+    endif
+    exe open_command . ' +' . pos . ' ' . filename
+    exe 'normal ' . col . '|'
+    exe 'normal zv'
+  endif
+endfunction
+
+function! ToggleEntireFold()
+  if foldclosed(2) == -1
+    normal zM
+  else
+    normal zR
+  endif
+endfunction
+
+function! FoldAg()
+  let line = getline(v:lnum)
+  if empty(line)
+    return '0'
+  else
+    return '1'
+  endif
+  return '0'
 endfunction
 
 function! ag#Ag(cmd, args)
@@ -85,7 +342,7 @@ function! ag#Ag(cmd, args)
   if empty(a:args)
     let l:grepargs = expand("<cword>")
   else
-    let l:grepargs = a:args . join(a:000, ' ')
+    let l:grepargs = a:args
   end
 
   if empty(l:grepargs)
@@ -139,14 +396,16 @@ function! ag#Ag(cmd, args)
     let l:match_count = len(getqflist())
   endif
 
-  if a:cmd =~# '^l' && l:match_count
-    exe g:ag_lhandler
-    let l:apply_mappings = g:ag_apply_lmappings
-    let l:matches_window_prefix = 'l' " we're using the location list
-  elseif l:match_count
-    exe g:ag_qhandler
-    let l:apply_mappings = g:ag_apply_qmappings
-    let l:matches_window_prefix = 'c' " we're using the quickfix window
+  if l:match_count
+    if a:cmd =~# '^l'
+      exe g:ag_lhandler
+      let l:apply_mappings = g:ag_apply_lmappings
+      let l:matches_window_prefix = 'l' " we're using the location list
+    else
+      exe g:ag_qhandler
+      let l:apply_mappings = g:ag_apply_qmappings
+      let l:matches_window_prefix = 'c' " we're using the quickfix window
+    endif
   endif
 
   " If highlighting is on, highlight the search keyword.

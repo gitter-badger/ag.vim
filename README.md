@@ -1,4 +1,5 @@
 # ag.vim #
+[![Build Status](https://travis-ci.org/albfan/ag.vim.svg?branch=master)](https://travis-ci.org/albfan/ag.vim)
 
 This plugin is a front for ag, A.K.A.
 [the_silver_searcher](https://github.com/ggreer/the_silver_searcher).  Ag can
@@ -46,6 +47,16 @@ in this window will open the file, and place the cursor on the matching line.
 
 Just like where you use :grep, :grepadd, :lgrep, and :lgrepadd, you can use `:Ag`, `:AgAdd`, `:LAg`, and `:LAgAdd` respectively. (See `doc/ag.txt`, or install and `:h Ag` for more information.)
 
+## Shell mimic ##
+
+For those who like how ag performs on shell use 
+
+    :[N]AgGroup {pattern} [{directory}]
+
+see this screencast
+
+![screencast of AgGroup](res/screencast_ag_group.gif)
+
 ### Gotchas ###
 
 Some characters have special meaning, and need to be escaped your search pattern. For instance, '#'. You have to escape it like this `:Ag '\\\#define foo'` to search for `#define foo`. (From [blueyed in issue #5](https://github.com/mileszs/ack.vim/issues/5).)
@@ -53,6 +64,10 @@ Some characters have special meaning, and need to be escaped your search pattern
 Sometimes `git grep` is even faster, though in my experience it's not noticeably so.
 
 ### Keyboard Shortcuts ###
+
+In any window you can issue
+
+    <Leader>ag to search word under cursor, or visual selection
 
 In the quickfix window, you can use:
 
