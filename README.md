@@ -45,6 +45,16 @@ in this window will open the file, and place the cursor on the matching line.
 
 Just like where you use :grep, :grepadd, :lgrep, and :lgrepadd, you can use `:Ag`, `:AgAdd`, `:LAg`, and `:LAgAdd` respectively. (See `doc/ag.txt`, or install and `:h Ag` for more information.)
 
+## Shell mimic ##
+
+For those who like how ag performs on shell use 
+
+    :[N]AgGroup {pattern} [{directory}]
+
+see this screencast
+
+![screencast of AgGroup](res/screencast_ag_group.gif)
+
 ### Gotchas ###
 
 Some characters have special meaning, and need to be escaped your search pattern. For instance, '#'. You have to escape it like this `:Ag '\\\#define foo'` to search for `#define foo`. (From [blueyed in issue #5](https://github.com/mileszs/ack.vim/issues/5).)
