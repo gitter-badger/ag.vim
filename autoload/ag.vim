@@ -88,7 +88,13 @@ function! ag#AgGroup(ncontext, args)
   if hlexists('agSearch')
     silent syn clear agSearch
   endif
-  execute 'syn match agSearch /' . a:args . '/'
+  if a:args =~ '^"'
+    "detect "find me" file1 file2
+    let searchstr = split(a:args, '"')[0]
+  else
+    let searchstr = split(a:args, '\s\+')[0]
+  endif
+  execute 'syn match agSearch /' . searchstr . '/'
   highlight link agLine LineNr
   highlight link agFile Question
   highlight link agSearch Todo
