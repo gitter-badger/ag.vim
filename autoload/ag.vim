@@ -80,6 +80,7 @@ function! ag#AgGroup(ncontext, args)
   else
     let searchstr = split(a:args, '\s\+')[0]
   endif
+  let searchstr = substitute(searchstr, '/', '\\/', 'g')
   execute 'syn match agSearch /' . searchstr . '/'
   highlight link agLine LineNr
   highlight link agFile Question
