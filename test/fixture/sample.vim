@@ -16,3 +16,8 @@ function! Foo(bar)
 
    echo 'argument bar is ' . a:bar
 endfunction
+
+function sample#Bar(arg)
+   echo "this is sample function called sample#Bar"
+   echo "a line with percentage %foge"
+endfunction
