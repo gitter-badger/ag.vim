@@ -1,7 +1,7 @@
 " NOTE: You must, of course, install ag / the_silver_searcher
 command! -bang -nargs=* -complete=file Ag call ag#Ag('grep<bang>',<q-args>)
 command! -bang -nargs=* -complete=file AgBuffer call ag#AgBuffer('grep<bang>',<q-args>)
-command! -count -nargs=* -complete=file AgGroup call ag#AgGroup(<count>, <q-args>)
+command! -count -nargs=*               AgGroup call ag#AgGroup(<count>, <q-args>)
 command! -bang -nargs=* -complete=file AgAdd call ag#Ag('grepadd<bang>', <q-args>)
 command! -bang -nargs=* -complete=file AgFromSearch call ag#AgFromSearch('grep<bang>', <q-args>)
 command! -bang -nargs=* -complete=file LAg call ag#Ag('lgrep<bang>', <q-args>)
