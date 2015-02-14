@@ -28,6 +28,23 @@ Then (syntax for multiword "let hoge"):
   AssertEqual SyntaxAt(3,8), 'agSearch'
   AssertEqual SyntaxAt(3,12), 'agSearch'
 
+Execute(find word with #):
+  :AgGroup "sample#Bar" test/fixture
+
+Expect (match on line 20 and 21):
+
+  test/fixture/sample.vim
+  20:10:function sample#Bar(arg) 
+  21:41:   echo "this is sample function called sample#Bar"
+
+Execute(find word with %):
+  :AgGroup "%foge" test/fixture
+
+Expect (match on line 22 and 41):
+
+  test/fixture/sample.vim
+  22:33:   echo "a line with percentage %foge"
+
 # As AgGroup open a new buffer, close it
 Execute:
   :close!
