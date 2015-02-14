@@ -67,7 +67,9 @@ function! ag#AgGroup(ncontext, args)
     let context = '-C' . a:ncontext 
   endif
 
-  execute '$read !ag --group --column ' . context . ' '. a:args
+  let searchstr = substitute(a:args,'#','\\#','g')
+  let searchstr = substitute(searchstr,'%','\\%','g')
+  execute '$read !ag --group --column ' . context . ' '. searchstr 
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
