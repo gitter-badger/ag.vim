@@ -134,6 +134,7 @@ function! OpenFile()
     echo 'split +' . pos . ' ' . filename
     exe 'split +' . pos . ' ' . filename
     exe 'normal ' . col . '|'
+    exe 'normal zv'
   endif
 endfunction
 
