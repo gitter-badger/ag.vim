@@ -103,6 +103,7 @@ function! ag#AgGroup(ncontext, args)
   1
   setlocal nomodifiable
   map <buffer> o za
+  map <buffer> <space> zMzjzo
   map <buffer> O :call ToggleEntireFold()<CR>
   map <buffer> <Enter> :call OpenFile()<CR>
 endfunction
