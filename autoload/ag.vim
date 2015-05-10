@@ -59,8 +59,17 @@ function! ag#AgBuffer(cmd, args)
 endfunction
 
 function! ag#AgGroup(ncontext, args)
-  botright new
-  setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+  silent! wincmd P
+  if !&previewwindow
+    execute 'bo ' . &previewheight . ' new'
+    set previewwindow
+  endif
+
+  setlocal modifiable
+
+  execute "silent %delete_"
+  
+  setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted nowrap
 
   let context = ''
   if a:ncontext > 0
