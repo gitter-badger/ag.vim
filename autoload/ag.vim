@@ -145,8 +145,15 @@ function! OpenFile()
       let filename = getline(curpos - 1)
     endwhile
     let filename = getline(curpos)
-    echo 'split +' . pos . ' ' . filename
-    exe 'split +' . pos . ' ' . filename
+    let avaliable_windows = map(filter(range(0, bufnr('$')), 'bufwinnr(v:val)>=0 && buflisted(v:val)'), 'bufwinnr(v:val)')
+    let open_command = "edit"
+    if (empty(avaliable_windows))
+      let open_command = "split"
+    else
+      let winnr = get(avaliable_windows, 0)
+      exe winnr . "wincmd w"
+    endif
+    exe open_command . ' +' . pos . ' ' . filename
     exe 'normal ' . col . '|'
     exe 'normal zv'
   endif
