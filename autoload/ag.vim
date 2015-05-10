@@ -109,12 +109,12 @@ endfunction
 
 function! OpenFile()
   let curpos = line('.')
-  let poscol = curpos
-  let line = getline(poscol)
+  let line = getline(curpos)
   if empty(line)
     return
   endif
 
+  let poscol = curpos
   while line !~ '^\d\+:'
     let poscol = poscol + 1
     let line = getline(poscol)
