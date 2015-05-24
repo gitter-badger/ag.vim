@@ -72,7 +72,44 @@ function! ag#AgBuffer(cmd, args)
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
 endfunction
 
+function! ag#VisualSelection()
+  try
+    let a_save = @a
+    normal! gv"ay
+    return @a
+  finally
+    let @a = a_save
+  endtry
+endfunction
+
+let g:last_aggroup=""
+
+function! ag#AgGroupLast(ncontext)
+  call ag#AgGroup(a:ncontext, g:last_aggroup)
+endfunction
+
 function! ag#AgGroup(ncontext, args)
+  if !empty(a:args)
+    let l:grepargs = a:args
+  else
+    let l:grepargs = ag#VisualSelection() 
+    if empty(l:grepargs)
+      let l:grepargs = expand("<cword>")
+      if empty(l:grepargs)
+         let l:grepargs = g:last_aggroup
+      endif
+    else
+      let l:grepargs = "'".l:grepargs."'"
+    endif
+  end
+
+  let g:last_aggroup = l:grepargs
+
+  if empty(l:grepargs)
+     echo "empty search"
+     return
+  endif
+
   silent! wincmd P
   if !&previewwindow
     execute 'bo ' . &previewheight . ' new'
@@ -90,23 +127,23 @@ function! ag#AgGroup(ncontext, args)
     let context = '-C' . a:ncontext 
   endif
 
-  let searchstr = substitute(a:args,'#','\\#','g')
-  let searchstr = substitute(searchstr,'%','\\%','g')
-  execute 'silent read !ag --group --column ' . context . ' '. searchstr 
+  let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
+  let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
+  execute 'silent read !ag --group --column ' . context . ' '. l:grepargs 
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
   if hlexists('agSearch')
     silent syn clear agSearch
   endif
-  if a:args =~ '^"'
+  if l:grepargs =~ '^"'
     "detect "find me" file1 file2
-    let searchstr = split(a:args, '"')[0]
+    let l:grepargs = split(l:grepargs, '"')[0]
   else
-    let searchstr = split(a:args, '\s\+')[0]
+    let l:grepargs = split(l:grepargs, '\s\+')[0]
   endif
-  let searchstr = substitute(searchstr, '/', '\\/', 'g')
-  execute 'syn match agSearch /' . searchstr . '/'
+  let l:grepargs = substitute(l:grepargs, '/', '\\/', 'g')
+  execute 'syn match agSearch /' . l:grepargs . '/'
   highlight link agLine LineNr
   highlight link agFile Question
   highlight link agSearch Todo
