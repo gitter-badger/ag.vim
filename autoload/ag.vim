@@ -214,7 +214,7 @@ function! ag#Ag(cmd, args)
   if empty(a:args)
     let l:grepargs = expand("<cword>")
   else
-    let l:grepargs = a:args . join(a:000, ' ')
+    let l:grepargs = a:args
   end
 
   " Format, used to manage column jump
