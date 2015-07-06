@@ -58,43 +58,47 @@ function! ag#AgBuffer(cmd, args)
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
 endfunction
 
-function! ag#VisualSelection()
-  try
-    let a_save = @a
-    normal! gv"ay
-    return @a
-  finally
-    let @a = a_save
-  endtry
+function! ag#VisualSelection(mode)
+  if a:mode =~ "^[vV]" 
+    try
+      let a_save = @a
+      normal! gv"ay
+      return @a
+    finally
+      let @a = a_save
+    endtry
+  else
+    return ""
+  endif
 endfunction
 
 let g:last_aggroup=""
 
 function! ag#AgGroupLast(ncontext)
-  call ag#AgGroup(a:ncontext, g:last_aggroup)
+  call ag#AgGroup(a:ncontext, '', g:last_aggroup)
 endfunction
 
-function! ag#AgGroup(ncontext, args)
+function! ag#AgGroup(ncontext, mode, args)
   if !empty(a:args)
     let l:grepargs = a:args
   else
-    let l:grepargs = ag#VisualSelection() 
+    let l:grepargs = ag#VisualSelection(a:mode) 
     if empty(l:grepargs)
       let l:grepargs = expand("<cword>")
       if empty(l:grepargs)
-         let l:grepargs = g:last_aggroup
+        let l:grepargs = g:last_aggroup
       endif
     else
-      let l:grepargs = "'".l:grepargs."'"
+      let l:grepargs = '"' . l:grepargs . '"'
     endif
   end
-
-  let g:last_aggroup = l:grepargs
 
   if empty(l:grepargs)
      echo "empty search"
      return
   endif
+
+  let g:last_aggroup = l:grepargs
 
   silent! wincmd P
   if !&previewwindow
@@ -115,7 +119,7 @@ function! ag#AgGroup(ncontext, args)
 
   let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
   let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
-  execute 'silent read !ag --group --column ' . context . ' '. l:grepargs 
+  execute 'silent read !ag --group --column ' . context . ' '. l:grepargs
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
