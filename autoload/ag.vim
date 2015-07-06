@@ -254,14 +254,16 @@ function! ag#Ag(cmd, args)
     let l:match_count = len(getqflist())
   endif
 
-  if a:cmd =~# '^l' && l:match_count
-    exe g:ag_lhandler
-    let l:apply_mappings = g:ag_apply_lmappings
-    let l:matches_window_prefix = 'l' " we're using the location list
-  elseif l:match_count
-    exe g:ag_qhandler
-    let l:apply_mappings = g:ag_apply_qmappings
-    let l:matches_window_prefix = 'c' " we're using the quickfix window
+  if l:match_count
+    if a:cmd =~# '^l'
+      exe g:ag_lhandler
+      let l:apply_mappings = g:ag_apply_lmappings
+      let l:matches_window_prefix = 'l' " we're using the location list
+    else
+      exe g:ag_qhandler
+      let l:apply_mappings = g:ag_apply_qmappings
+      let l:matches_window_prefix = 'c' " we're using the quickfix window
+    endif
   endif
 
   " If highlighting is on, highlight the search keyword.
