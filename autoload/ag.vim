@@ -50,6 +50,10 @@ if !exists("g:ag_goto_exact_line")
   let g:ag_goto_exact_line=0
 endif
 
+if !exists("g:ag_ignore_case")
+  let g:ag_ignore_case=0
+endif
+
 function! ag#AgBuffer(cmd, args)
   let l:bufs = filter(range(1, bufnr('$')), 'buflisted(v:val)')
   let l:files = []
@@ -123,9 +127,18 @@ function! ag#AgGroup(ncontext, mode, args)
 
   let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
   let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
+  if g:ag_ignore_case
+    let ignorecaseoption = "-i"
+    "let ignorecaseoption = "--smartcase"
+  else
+    let ignorecaseoption = ""
+  endif
   "--vimgrep doesn't work well here
   let ag_prg = 'ag'
-  execute 'silent read !' . ag_prg . ' --group --column ' . context . ' '. l:grepargs
+  execute 'silent read !' . ag_prg . ' ' . ignorecaseoption . ' --group --column ' . context . ' '. l:grepargs
+  if g:ag_ignore_case
+    syn case ignore
+  endif
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
