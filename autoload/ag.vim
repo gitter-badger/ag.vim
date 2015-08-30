@@ -60,6 +60,10 @@ if !exists("g:ag_working_path_mode")
     let g:ag_working_path_mode = 'c'
 endif
 
+if !exists("g:ag_goto_exact_line")
+  let g:ag_goto_exact_line=0
+endif
+
 function! ag#AgBuffer(cmd, args)
   let l:bufs = filter(range(1, bufnr('$')), 'buflisted(v:val)')
   let l:files = []
@@ -177,15 +181,31 @@ function! OpenFile()
     return
   endif
 
+  let increment = 1
+
   let poscol = curpos
   while line !~ '^\d\+:'
-    let poscol = poscol + 1
+    let poscol = poscol + increment
     let line = getline(poscol)
+
+    if empty(line)
+      if increment == -1
+        echom 'Cannot find filefor match'
+        break
+      else
+        let increment = -1
+      endif
+    endif
   endwhile
+
+  let offset = curpos - poscol
 
   if line =~ '^\d\+:'
     let data = split(line,':')
     let pos = data[0]
+    if g:ag_goto_exact_line
+      let pos += offset
+    endif
     let col = data[1]
 
     let filename = getline(curpos - 1)
