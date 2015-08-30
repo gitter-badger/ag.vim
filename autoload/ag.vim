@@ -249,6 +249,7 @@ function! ag#Ag(cmd, args)
   end
 
   " Format, used to manage column jump
+  " mark as File search
   if a:cmd =~# '-g$'
     let s:ag_format_backup=g:ag_format
     let g:ag_format="%f"
@@ -275,6 +276,7 @@ function! ag#Ag(cmd, args)
     let &t_te=l:t_te_bak
   endtry
 
+  " mark to config location list
   if a:cmd =~# '^l'
     let l:match_count = len(getloclist(winnr()))
   else
