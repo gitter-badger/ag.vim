@@ -12,3 +12,8 @@ command! -bang -nargs=* -complete=file LAgAdd call ag#Ag('lgrepadd<bang>', <q-ar
 command! -bang -nargs=* -complete=file AgFile call ag#Ag('grep<bang> -g', <q-args>)
 command! -bang -nargs=* -complete=help AgHelp call ag#AgHelp('grep<bang>',<q-args>)
 command! -bang -nargs=* -complete=help LAgHelp call ag#AgHelp('lgrep<bang>',<q-args>)
+
+vnoremap <Leader>ag :call ag#AgGroup(v:count, 'v', '')<CR>
+nnoremap <Leader>ag :call ag#AgGroup(v:count, '', '')<CR>
+nnoremap <Leader>ra :call ag#AgGroupLast(v:count)<CR>
+
