@@ -76,7 +76,8 @@ function! ag#AgBuffer(cmd, args)
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
 endfunction
 
-function! ag#VisualSelection(mode)
+function! ag#VisualSelection(visualmode)
+  if a:visualmode
     try
       let a_save = @a
       normal! gv"ay
@@ -90,15 +91,15 @@ endfunction
 let g:last_aggroup=""
 
 function! ag#AgGroupLast(ncontext)
-  call ag#AgGroup(a:ncontext, '', '', g:last_aggroup)
+  call ag#AgGroup(a:ncontext, 0, '', g:last_aggroup)
 endfunction
 
-function! ag#GetArgs(ncontext, mode, args)
+function! ag#GetArgs(ncontext, visualmode, args)
   if !empty(a:args)
     let l:grepargs = a:args
   else
-    if a:mode =~ "^[vV]"
-      let l:grepargs = ag#VisualSelection(a:mode)
+    if a:visualmode
+      let l:grepargs = ag#VisualSelection(a:visualmode)
     else
       let l:grepargs = ""
     endif
@@ -114,8 +115,8 @@ function! ag#GetArgs(ncontext, mode, args)
   return l:grepargs
 endfunction
 
-function! ag#AgGroup(ncontext, mode, fileregexp, args)
-  let l:grepargs = ag#GetArgs(a:ncontext, a:mode, a:args)
+function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
+  let l:grepargs = ag#GetArgs(a:ncontext, a:visualmode, a:args)
 
   if empty(l:grepargs)
      echo "empty search"
