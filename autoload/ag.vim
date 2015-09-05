@@ -77,7 +77,6 @@ function! ag#AgBuffer(cmd, args)
 endfunction
 
 function! ag#VisualSelection(mode)
-  if a:mode =~ "^[vV]" 
     try
       let a_save = @a
       normal! gv"ay
@@ -85,22 +84,24 @@ function! ag#VisualSelection(mode)
     finally
       let @a = a_save
     endtry
-  else
     return ""
-  endif
 endfunction
 
 let g:last_aggroup=""
 
 function! ag#AgGroupLast(ncontext)
-  call ag#AgGroup(a:ncontext, '', g:last_aggroup)
+  call ag#AgGroup(a:ncontext, '', '', g:last_aggroup)
 endfunction
 
-function! ag#AgGroup(ncontext, mode, args)
+function! ag#GetArgs(ncontext, mode, args)
   if !empty(a:args)
     let l:grepargs = a:args
   else
-    let l:grepargs = ag#VisualSelection(a:mode) 
+    if a:mode =~ "^[vV]"
+      let l:grepargs = ag#VisualSelection(a:mode)
+    else
+      let l:grepargs = ""
+    endif
     if empty(l:grepargs)
       let l:grepargs = expand("<cword>")
       if empty(l:grepargs)
@@ -109,7 +110,12 @@ function! ag#AgGroup(ncontext, mode, args)
     else
       let l:grepargs = '"' . l:grepargs . '"'
     endif
-  end
+  endif
+  return l:grepargs
+endfunction
+
+function! ag#AgGroup(ncontext, mode, fileregexp, args)
+  let l:grepargs = ag#GetArgs(a:ncontext, a:mode, a:args)
 
   if empty(l:grepargs)
      echo "empty search"
@@ -127,19 +133,25 @@ function! ag#AgGroup(ncontext, mode, args)
   setlocal modifiable
 
   execute "silent %delete_"
-  
+
   setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted nowrap
 
   let context = ''
   if a:ncontext > 0
-    let context = '-C' . a:ncontext 
+    let context = '-C' . a:ncontext
+  endif
+
+  if empty(a:fileregexp)
+    let fileregexp = ''
+  else
+    let fileregexp = '-G' . a:fileregexp
   endif
 
   let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
   let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
   "--vimgrep doesn't work well here
   let ag_prg = 'ag'
-  execute 'silent read !' . ag_prg . ' --group --column ' . context . ' '. l:grepargs
+  execute 'silent read !' . ag_prg . ' --group --column ' . context . ' ' . fileregexp . ' ' . l:grepargs
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
