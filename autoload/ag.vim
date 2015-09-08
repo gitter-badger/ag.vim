@@ -52,6 +52,10 @@ if !exists("g:ag_lhandler")
   let g:ag_lhandler="botright lopen"
 endif
 
+if !exists("g:ag_nhandler")
+  let g:ag_nhandler="botright new"
+endif
+
 if !exists("g:ag_mapping_message")
   let g:ag_mapping_message=1
 endif
@@ -127,7 +131,8 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
 
   silent! wincmd P
   if !&previewwindow
-    execute 'bo ' . &previewheight . ' new'
+    exe g:ag_nhandler
+    execute  'resize ' . &previewheight
     set previewwindow
   endif
 
@@ -186,13 +191,41 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
   setlocal foldcolumn=2
   1
   setlocal nomodifiable
-  map <buffer> o za
-  map <buffer> <space> zMzjzo
+  map <buffer> o zaj
+  map <buffer> <space> :call NextFold()<CR>
   map <buffer> O :call ToggleEntireFold()<CR>
-  map <buffer> <Enter> :call OpenFile()<CR>
+  map <buffer> <Enter> :call OpenFile(0)<CR>
+  map <buffer> s :call OpenFile(1)<CR>
+  map <buffer> S :call OpenFile(2)<CR>
 endfunction
 
-function! OpenFile()
+" Find next fold or go back to first one
+"
+function NextFold()
+  let save_a_mark = getpos("'a")
+  let mark_a_exists = save_a_mark[1] == 0 
+  mark a
+  execute 'normal zMzjzo'
+  if getpos('.')[1] == getpos("'a")[1]
+    "no movement go to first position
+    normal gg
+    execute 'normal zMzjzo'
+  endif  
+  if mark_a_exists
+    call setpos("'a", save_a_mark)
+  else
+    delmark a
+  endif
+endfunction
+
+" Open file for AgGroup selection
+"
+" forceSplit:
+"    0 no
+"    1 horizontal
+"    2 vertical
+"
+function! OpenFile(forceSplit)
   let curpos = line('.')
   let line = getline(curpos)
   if empty(line)
@@ -234,8 +267,13 @@ function! OpenFile()
     let filename = getline(curpos)
     let avaliable_windows = map(filter(range(0, bufnr('$')), 'bufwinnr(v:val)>=0 && buflisted(v:val)'), 'bufwinnr(v:val)')
     let open_command = "edit"
-    if (empty(avaliable_windows))
-      let open_command = "split"
+    if a:forceSplit || empty(avaliable_windows)
+      if a:forceSplit > 1
+        wincmd k
+        let open_command = "vertical leftabove vsplit"
+      else
+        let open_command = "split"
+      endif
     else
       let winnr = get(avaliable_windows, 0)
       exe winnr . "wincmd w"
