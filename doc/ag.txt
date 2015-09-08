@@ -28,6 +28,9 @@ the results in a split window.
      o       fold/unfold current file match
      O       fold/unfold all matches
      <Enter> Goto selected file:line:col
+     <space> Open next fold search (cyclic)
+     s       Goto selected file:line:col splitting horizontal above
+     S       Goto selected file:line:col splitting vertical above
 
 :AgBuffer[!] [options] {pattern}                                    *:AgBuffer*
 
@@ -134,6 +137,11 @@ A custom command used to open the error list after it's populated. Default:
 "botright copen". You might want to set this to change where the quickfix
 window is opened, or what size it is. Example: >
   let g:ag_qhandler="copen 20"
+                                                                *g:ag_nhandler*
+A custom command used to open the AgGroup list after it's populated. Default:
+"botright new". You might want to set this to change where it is opened.
+Example: >
+  let g:ag_nhandler="topleft new"
 <
 
                                                          *g:ag_mapping_message*

@@ -13,7 +13,11 @@ command! -bang -nargs=* -complete=file AgFile call ag#Ag('grep<bang> -g', <q-arg
 command! -bang -nargs=* -complete=help AgHelp call ag#AgHelp('grep<bang>',<q-args>)
 command! -bang -nargs=* -complete=help LAgHelp call ag#AgHelp('lgrep<bang>',<q-args>)
 
-if exists("g:ag_disable_shortcuts")
+if !exists("g:ag_shortcuts")
+  let g:ag_shortcuts=1
+endif
+
+if exists("g:ag_shortcuts")
   vnoremap <Leader>ag :call ag#AgGroup(v:count, 1, '', '')<CR>
   nnoremap <Leader>ag :call ag#AgGroup(v:count, 0, '', '')<CR>
   nnoremap <Leader>ra :call ag#AgGroupLast(v:count)<CR>
