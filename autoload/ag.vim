@@ -153,6 +153,11 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
   "--vimgrep doesn't work well here
   let ag_prg = 'ag'
   execute 'silent read !' . ag_prg . ' -S --group --column ' . context . ' ' . fileregexp . ' ' . l:grepargs
+  if !empty(fileregexp) && match(l:grepargs, '\C[A-Z]') == -1
+    "explicit file-filter and search in lower case
+    syn case ignore
+  endif
+
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
