@@ -152,7 +152,7 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
   let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
   "--vimgrep doesn't work well here
   let ag_prg = 'ag'
-  execute 'silent read !' . ag_prg . ' --group --column ' . context . ' ' . fileregexp . ' ' . l:grepargs
+  execute 'silent read !' . ag_prg . ' -S --group --column ' . context . ' ' . fileregexp . ' ' . l:grepargs
   syn match agLine /^\d\+:\d\+\(:\)\@=/
   syn match agLineContext /^\d\+-/
   syn match agFile /^\n.\+$/hs=s+1
