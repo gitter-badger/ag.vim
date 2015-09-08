@@ -191,12 +191,27 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
   setlocal foldcolumn=2
   1
   setlocal nomodifiable
-  map <buffer> o zaj
-  map <buffer> <space> :call NextFold()<CR>
-  map <buffer> O :call ToggleEntireFold()<CR>
-  map <buffer> <Enter> :call OpenFile(0)<CR>
-  map <buffer> s :call OpenFile(1)<CR>
-  map <buffer> S :call OpenFile(2)<CR>
+  noremap <silent> <buffer> o zaj
+  noremap <silent> <buffer> <space> :call NextFold()<CR>
+  noremap <silent> <buffer> O :call ToggleEntireFold()<CR>
+  noremap <silent> <buffer> <Enter> :call OpenFile(0)<CR>
+  noremap <silent> <buffer> s :call OpenFile(1)<CR>
+  noremap <silent> <buffer> S :call OpenFile(2)<CR>
+  noremap <silent> <buffer> d :call DeleteFold()<CR>
+endfunction
+
+function DeleteFold()
+  if foldlevel(".") == 0
+    return
+  endif
+  setlocal modifiable
+  if foldclosed(".") != -1
+    normal zo
+  endif
+  "normal stops if command fails. On  cursor at beginning of fold motion fails
+  normal! [z
+  normal! kVj]zD
+  setlocal nomodifiable
 endfunction
 
 " Find next fold or go back to first one
