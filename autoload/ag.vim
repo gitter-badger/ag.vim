@@ -163,8 +163,8 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
     syn case ignore
   endif
 
-  syn match agLine /^\d\+:\d\+\(:\)\@=/
-  syn match agLineContext /^\d\+-/
+  syn match agLine /^\d\+:\d\+:/ conceal
+  syn match agLineContext /^\d\+-/ conceal
   syn match agFile /^\n.\+$/hs=s+1
   if hlexists('agSearch')
     silent syn clear agSearch
@@ -198,6 +198,15 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
   noremap <silent> <buffer> s :call OpenFile(1)<CR>
   noremap <silent> <buffer> S :call OpenFile(2)<CR>
   noremap <silent> <buffer> d :call DeleteFold()<CR>
+  noremap <silent> <buffer> gl :call ToggleShowLine()<CR>
+endfunction
+
+function ToggleShowLine()
+  if &conceallevel == 0
+    setlocal conceallevel=2
+  else
+    setlocal conceallevel=0
+  endif  
 endfunction
 
 function DeleteFold()
