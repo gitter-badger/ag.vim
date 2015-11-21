@@ -63,6 +63,10 @@ Sometimes `git grep` is even faster, though in my experience it's not noticeably
 
 ### Keyboard Shortcuts ###
 
+In any window you can issue
+
+    <Leader>ag to search word under cursor, or visual selection
+
 In the quickfix window, you can use:
 
     e    to open file and close the quickfix window

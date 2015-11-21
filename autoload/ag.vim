@@ -66,16 +66,16 @@ function! ag#AgBuffer(cmd, args)
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
 endfunction
 
-function! ag#VisualSelection(visualmode)
-  if a:visualmode
-    try
-      let a_save = @a
-      normal! gv"ay
-      return @a
-    finally
-      let @a = a_save
-    endtry
-    return ""
+function! ag#VisualSelection()
+  let selection = ""
+  try
+    let a_save = @a
+    normal! gv"ay
+    let selection = @a
+  finally
+    let @a = a_save
+  endtry
+  return selection
 endfunction
 
 let g:last_aggroup=""
@@ -89,7 +89,7 @@ function! ag#GetArgs(ncontext, visualmode, args)
     let l:grepargs = a:args
   else
     if a:visualmode
-      let l:grepargs = ag#VisualSelection(a:visualmode)
+      let l:grepargs = ag#VisualSelection()
     else
       let l:grepargs = ""
     endif
