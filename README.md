@@ -1,4 +1,5 @@
 # ag.vim #
+[![Build Status](https://travis-ci.org/albfan/ag.vim.svg?branch=master)](https://travis-ci.org/albfan/ag.vim)
 
 This plugin is a front for ag, A.K.A.
 [the_silver_searcher](https://github.com/ggreer/the_silver_searcher).  Ag can
