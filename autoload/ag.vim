@@ -163,9 +163,12 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
   endif
   let l:grepargs = substitute(l:grepargs, '/', '\\/', 'g')
   try
-    execute 'syn match agSearch /' . escape(l:grepargs, "|()") . '/'
-  catch /^Vim\%((\a\+)\)\=:E54/ " invalid regexp
-    execute 'syn match agSearch /' . l:grepargs . '/'
+    try
+      execute 'syn match agSearch /' . escape(l:grepargs, "\|()") . '/'
+    catch /^Vim\%((\a\+)\)\=:E54/ " invalid regexp
+        execute 'syn match agSearch /' . l:grepargs . '/'
+    endtry
+  catch
   endtry
 
   highlight link agLine LineNr
