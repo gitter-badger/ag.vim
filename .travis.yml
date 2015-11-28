@@ -1,0 +1,17 @@
+language: generic
+
+sudo: required
+dist: trusty
+
+before_script:
+  - sudo apt-get update -qq
+  - sudo apt-get install vim
+  - sudo apt-get install silversearcher-ag
+
+script:
+  - cd t
+  - ./suite.sh --verbose
+
+notifications:
+  email:
+    -  albertofanjul@gmail.com
