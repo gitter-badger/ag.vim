@@ -3,7 +3,7 @@
 VIM=vim
 
 function colorecho() {
-   echo -e "\x1b[$1m$2\x1b[m"
+   printf "%s" "$(tput setaf $1)${@:2}$(tput sgr0)"
 }
 
 function getdependencies() {
@@ -24,9 +24,8 @@ function test() {
       break
     fi
   done
-  if [ "$expect" == "skip" ]
-  then
-    echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 33 skip)
+  if [[ "$expect" == "skip" ]]; then
+    echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 3 skip)
     continue
   fi
 
@@ -51,17 +50,17 @@ function test() {
   then
     if [ "$expect" == "failed" ]
     then
-      echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 31 "not failed")
+      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 1 "not failed")
       OK=1
     else
-      echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 32 ok)
+      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 2 ok)
     fi
   else
     if [ "$expect" == "failed" ]
     then
-      echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 32 "failed correctly")
+      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 2 "failed correctly")
     else
-      echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 31 ko)
+      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 1 ko)
       OK=1
     fi
   fi
