@@ -34,7 +34,7 @@ endif
 if exists('s:ag_mappings')
   for [modes, lhs, rhs] in s:ag_mappings
     for m in split(modes, '\zs')
-      if !hasmapto(rhs, m) && mapcheck(lhs, m) ==# ''
+      if mapcheck(lhs, m) ==# '' && maparg(rhs, m) !=# '' && !hasmapto(rhs, m)
         exe m.'map <silent>' lhs rhs
       endif
     endfor
