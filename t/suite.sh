@@ -8,7 +8,8 @@ function colorecho() {
 
 function getdependencies() {
    rm -rf vader.vim
-   git clone https://github.com/junegunn/vader.vim 
+   git clone -b master --single-branch --depth=1 \
+       https://github.com/junegunn/vader.vim
 }
 
 function test() {
