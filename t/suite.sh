@@ -10,6 +10,12 @@ getdependencies() {
        https://github.com/junegunn/vader.vim && echo
 }
 
+urun() { local file="$1" name="$2"
+  cp -r ../fixture . && bash ../${name}.sh >/dev/null 2>&1
+  eval $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../${file} \
+      $( ((VERBOSE)) || echo '>/dev/null 2>&1' )
+}
+
 utest() {
   local file="$1" name="${1%.vader}"
   local title="$(sed -rn '/^"""\s*([^"].*)/ s//\1/p' $file)"
@@ -28,16 +34,9 @@ utest() {
   fi
 
   tempdir=$(mktemp -d "${name}.XXX")
-
-  cd $tempdir
-  cp -r ../fixture .
-  bash ../${name}.sh >/dev/null 2>&1
-  eval $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../$file \
-          $( ((VERBOSE)) || echo '>/dev/null 2>&1' )
+  trap "rm -rf '$tempdir'" RETURN INT TERM EXIT
+  (cd "$tempdir" && urun "$file" "$name")
   RET=$?
-
-  cd ..
-  rm -rf $tempdir
 
   case "$expect"  # TODO:RFC: change return code mechanics -- simplify more
     in failed) ((RET)) && msg="2 failed correctly" || { msg="1 not failed"; RET=1; }
