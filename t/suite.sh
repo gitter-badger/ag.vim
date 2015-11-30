@@ -14,6 +14,7 @@ test() {
   basenametest=$1
   title="$(grep '^"""[^"]' $basenametest.vader | sed 's/^"""\s*//')"
   expect=$(grep '^\s*""""' $basenametest.vader | sed 's/^""""\s*//')
+  entry="$(colorecho 4 ${basenametest}) ${title}"
   for skp in $SKIP_TESTS; do
     if [[ "$basenametest" == "$skp" ]]; then
       expect="skip"
@@ -21,7 +22,7 @@ test() {
     fi
   done
   if [[ "$expect" == "skip" ]]; then
-    echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 3 skip)
+    echo "$entry $(colorecho 3 skip)"
     continue
   fi
 
@@ -30,36 +31,18 @@ test() {
   cd $tempdir
   cp -r ../fixture .
   bash ../${basenametest}.sh &> /dev/null
-  if [[ "$SILENT" == 0 ]]
-  then
-     $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../$basenametest.vader &> /dev/null 
-  else
-     $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../$basenametest.vader
-  fi
-
-  OK=$? 
+  eval $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../$basenametest.vader \
+          $( ((SILENT)) || echo '>/dev/null 2>&1' )
+  OK=$?
 
   cd ..
   rm -rf $tempdir
 
-  if [[ "$OK" == 0 ]]
-  then
-    if [[ "$expect" == "failed" ]]
-    then
-      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 1 "not failed")
-      OK=1
-    else
-      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 2 ok)
-    fi
-  else
-    if [[ "$expect" == "failed" ]]
-    then
-      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 2 "failed correctly")
-    else
-      echo $(colorecho 4 ${basenametest}) "${title}" $(colorecho 1 ko)
-      OK=1
-    fi
-  fi
+  case "$expect"
+    in failed) ((OK==0)) && { rsp="1 not failed"; OK=1; } || rsp="2 failed correctly"
+    ;; *) ((OK==0)) && rsp="2 ok" || { rsp="1 ko"; OK=1; }
+  esac
+  echo "$entry $(colorecho $rsp)"
 }
 
 testsuite() {
@@ -68,12 +51,12 @@ testsuite() {
   getdependencies
 
   [[ "$1" == '--verbose' ]] && SILENT=1 || SILENT=0
-  
+
   for testcase in *.vader; do
     basenametest=$(basename $testcase .vader)
     test $basenametest
   done
-  
+
   echo
   (($OK)) && echo some test failed || echo test suite passed correctly
   exit $OK
