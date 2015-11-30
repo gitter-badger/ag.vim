@@ -1,22 +1,23 @@
 #!/bin/bash
 
+case "$1" in --verbose) VERBOSE=1; shift ;; *) VERBOSE=0 ;; esac
 VIM=vim
 
 colorecho() { printf "%s" "$(tput setaf $1)${@:2}$(tput sgr0)"; }
-
 getdependencies() {
    rm -rf vader.vim
    git clone -b master --single-branch --depth=1 \
-       https://github.com/junegunn/vader.vim
+       https://github.com/junegunn/vader.vim && echo
 }
 
-test() {
-  basenametest=$1
-  title="$(sed -rn '/^"""\s*([^"].*)/ s//\1/p' $basenametest.vader)"
-  expect="$(sed -rn '/^\s*""""\s*/ s///p' $basenametest.vader)"
-  entry="$(colorecho 4 ${basenametest}) ${title}"
+utest() {
+  local file="$1" name="${1%.vader}"
+  local title="$(sed -rn '/^"""\s*([^"].*)/ s//\1/p' $file)"
+  local expect="$(sed -rn '/^\s*""""\s*/ s///p' $file)"
+  local entry="$(colorecho 4 ${name}) ${title}"
+
   for skp in $SKIP_TESTS; do
-    if [[ "$basenametest" == "$skp" ]]; then
+    if [[ "$name" == "$skp" ]]; then
       expect="skip"
       break
     fi
@@ -26,45 +27,35 @@ test() {
     continue
   fi
 
-  tempdir=$(mktemp -d "${basenametest}.XXX")
+  tempdir=$(mktemp -d "${name}.XXX")
 
   cd $tempdir
   cp -r ../fixture .
-  bash ../${basenametest}.sh &> /dev/null
-  eval $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../$basenametest.vader \
-          $( ((SILENT)) || echo '>/dev/null 2>&1' )
-  OK=$?
+  bash ../${name}.sh >/dev/null 2>&1
+  eval $VIM -N -u NONE -S ../helper.vim -c 'Vader!' ../$file \
+          $( ((VERBOSE)) || echo '>/dev/null 2>&1' )
+  RET=$?
 
   cd ..
   rm -rf $tempdir
 
-  case "$expect"
-    in failed) ((OK==0)) && { rsp="1 not failed"; OK=1; } || rsp="2 failed correctly"
-    ;; *) ((OK==0)) && rsp="2 ok" || { rsp="1 ko"; OK=1; }
+  case "$expect"  # TODO:RFC: change return code mechanics -- simplify more
+    in failed) ((RET)) && msg="2 failed correctly" || { msg="1 not failed"; RET=1; }
+    ;;      *) ((RET)) && { msg="1 ko"; RET=1; }   || msg="2 ok"
   esac
-  echo "$entry $(colorecho $rsp)"
+  echo "$entry $(colorecho $msg)"
 }
 
 testsuite() {
-  OK=0
-  
   getdependencies
-
-  [[ "$1" == '--verbose' ]] && SILENT=1 || SILENT=0
-
   for testcase in *.vader; do
-    basenametest=$(basename $testcase .vader)
-    test $basenametest
+    utest "$testcase"
   done
-
-  echo
-  (($OK)) && echo some test failed || echo test suite passed correctly
-  exit $OK
+  echo $(if ((${RET=0}))
+  then colorecho '1 some test failed'
+  else colorecho '2 test suite passed'
+  fi)
+  exit $RET
 }
 
-if [[ "$#" == 0 || "$1" == "--verbose" ]]; then
-   testsuite $@
-else
-   SILENT=1
-   test $@
-fi
+if (($#)); then test $@; else testsuite; fi
