@@ -2,9 +2,7 @@
 
 VIM=vim
 
-colorecho() {
-   printf "%s" "$(tput setaf $1)${@:2}$(tput sgr0)"
-}
+colorecho() { printf "%s" "$(tput setaf $1)${@:2}$(tput sgr0)"; }
 
 getdependencies() {
    rm -rf vader.vim
@@ -16,10 +14,8 @@ test() {
   basenametest=$1
   title="$(grep '^"""[^"]' $basenametest.vader | sed 's/^"""\s*//')"
   expect=$(grep '^\s*""""' $basenametest.vader | sed 's/^""""\s*//')
-  for skp in $SKIP_TESTS
-  do
-    if [[ "$basenametest" == "$skp" ]]
-    then
+  for skp in $SKIP_TESTS; do
+    if [[ "$basenametest" == "$skp" ]]; then
       expect="skip"
       break
     fi
@@ -71,12 +67,7 @@ testsuite() {
   
   getdependencies
 
-  if [[ "$1" == '--verbose' ]]
-  then 
-    SILENT=1
-  else
-    SILENT=0
-  fi
+  [[ "$1" == '--verbose' ]] && SILENT=1 || SILENT=0
   
   for testcase in *.vader; do
     basenametest=$(basename $testcase .vader)
@@ -84,19 +75,11 @@ testsuite() {
   done
   
   echo
-  
-  if [[ $OK != 0 ]]
-  then
-     echo some test failed
-  else
-     echo test suite passed correctly
-  fi
-
+  (($OK)) && echo some test failed || echo test suite passed correctly
   exit $OK
 }
 
-if [[ "$#" == 0 || "$1" == "--verbose" ]]
-then
+if [[ "$#" == 0 || "$1" == "--verbose" ]]; then
    testsuite $@
 else
    SILENT=1
