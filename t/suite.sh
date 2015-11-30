@@ -12,8 +12,8 @@ getdependencies() {
 
 test() {
   basenametest=$1
-  title="$(grep '^"""[^"]' $basenametest.vader | sed 's/^"""\s*//')"
-  expect=$(grep '^\s*""""' $basenametest.vader | sed 's/^""""\s*//')
+  title="$(sed -rn '/^"""\s*([^"].*)/ s//\1/p' $basenametest.vader)"
+  expect="$(sed -rn '/^\s*""""\s*/ s///p' $basenametest.vader)"
   entry="$(colorecho 4 ${basenametest}) ${title}"
   for skp in $SKIP_TESTS; do
     if [[ "$basenametest" == "$skp" ]]; then
