@@ -26,6 +26,12 @@ nnoremap <silent> <Plug>(ag-group-last)  :call ag#AgGroupLast(v:count)<CR>
 " TODO: add <Plug> mappings for Ag* and LAg*
 
 
+try
+  call operator#user#define('ag-qf-do', 'ag#operator_qf')
+catch /E117:/
+endtry
+
+
 if !(exists("g:ag_no_default_mappings") && g:ag_no_default_mappings)
   let s:ag_mappings = [
     \ ['nx', '<Leader>af', '<Plug>(ag-qf)'],
@@ -43,6 +49,8 @@ if !(exists("g:ag_no_default_mappings") && g:ag_no_default_mappings)
     \
     \ ['nx', '<Leader>ag', '<Plug>(ag-group)'],
     \ ['n',  '<Leader>ra', '<Plug>(ag-group-last)'],
+    \
+    \ ['nx', '<Leader>ad', '<Plug>(operator-ag-qf-do)'],
     \]
 endif
 

@@ -195,7 +195,7 @@ function ToggleShowLine()
     setlocal conceallevel=2
   else
     setlocal conceallevel=0
-  endif  
+  endif
 endfunction
 
 function DeleteFold()
@@ -216,14 +216,14 @@ endfunction
 "
 function NextFold()
   let save_a_mark = getpos("'a")
-  let mark_a_exists = save_a_mark[1] == 0 
+  let mark_a_exists = save_a_mark[1] == 0
   mark a
   execute 'normal zMzjzo'
   if getpos('.')[1] == getpos("'a")[1]
     "no movement go to first position
     normal gg
     execute 'normal zMzjzo'
-  endif  
+  endif
   if mark_a_exists
     call setpos("'a", save_a_mark)
   else
@@ -437,3 +437,29 @@ function! ag#AgHelp(cmd,args)
   let args = a:args.' '.ag#GetDocLocations()
   call ag#Ag(a:cmd,args)
 endfunction
+
+
+function! ag#operator_qf(motion_wise) " {{{
+  let beg = line("'[")
+  let end = line("']")
+
+  for n in range(beg, end)
+    let _s = getline(n)
+    let s = {
+          \  "all":     _s,
+          \  "between": _s[col("'[")-1 : col("']")-1],
+          \  "pos2end": _s[col("'[")-1 : -1 ],
+          \  "beg2pos": _s[ : col("']")-1],
+          \  }
+
+    if a:motion_wise == 'char'
+      let str = ( beg == end ? s.between :
+                \ n   == beg ? s.pos2end :
+                \ n   == end ? s.beg2pos : s.all)
+    elseif a:motion_wise == 'line'  | let str = s.all
+    elseif a:motion_wise == 'block' | let str = s.between
+    endif
+
+    call ag#Ag('grep<bang>', str)
+  endfor
+endfunction " }}}
