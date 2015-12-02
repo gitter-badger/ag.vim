@@ -66,54 +66,16 @@ function! ag#AgBuffer(cmd, args)
   call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
 endfunction
 
-function! ag#VisualSelection()
-  let selection = ""
-  try
-    let a_save = @a
-    normal! gv"ay
-    let selection = @a
-  finally
-    let @a = a_save
-  endtry
-  return selection
-endfunction
-
 let g:last_aggroup=""
 
 function! ag#AgGroupLast(ncontext)
   call ag#AgGroup(a:ncontext, 0, '', g:last_aggroup)
 endfunction
 
-function! ag#GetArgs(ncontext, visualmode, args)
-  if !empty(a:args)
-    let l:grepargs = a:args
-  else
-    if a:visualmode
-      let l:grepargs = ag#VisualSelection()
-    else
-      let l:grepargs = ""
-    endif
-    if empty(l:grepargs)
-      let l:grepargs = expand("<cword>")
-      if empty(l:grepargs)
-        let l:grepargs = g:last_aggroup
-      endif
-    else
-      let l:grepargs = '"' . l:grepargs . '"'
-    endif
-  endif
-  return l:grepargs
-endfunction
-
-function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
-  let l:grepargs = ag#GetArgs(a:ncontext, a:visualmode, a:args)
-
-  if empty(l:grepargs)
-     echo "empty search"
-     return
-  endif
-
+function! ag#AgGroup(args, ncontext, ...)
+  let l:grepargs = a:args
   let g:last_aggroup = l:grepargs
+  let fileregexp = (a:0<1 ? '' : '-G'.a:1)
 
   silent! wincmd P
   if !&previewwindow
@@ -133,11 +95,6 @@ function! ag#AgGroup(ncontext, visualmode, fileregexp, args)
     let context = '-C' . a:ncontext
   endif
 
-  if empty(a:fileregexp)
-    let fileregexp = ''
-  else
-    let fileregexp = '-G' . a:fileregexp
-  endif
 
   let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
   let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
@@ -195,7 +152,7 @@ function ToggleShowLine()
     setlocal conceallevel=2
   else
     setlocal conceallevel=0
-  endif  
+  endif
 endfunction
 
 function DeleteFold()
@@ -216,14 +173,14 @@ endfunction
 "
 function NextFold()
   let save_a_mark = getpos("'a")
-  let mark_a_exists = save_a_mark[1] == 0 
+  let mark_a_exists = save_a_mark[1] == 0
   mark a
   execute 'normal zMzjzo'
   if getpos('.')[1] == getpos("'a")[1]
     "no movement go to first position
     normal gg
     execute 'normal zMzjzo'
-  endif  
+  endif
   if mark_a_exists
     call setpos("'a", save_a_mark)
   else
