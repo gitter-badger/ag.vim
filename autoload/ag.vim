@@ -1,5 +1,3 @@
-" NOTE: You must, of course, install ag / the_silver_searcher
-
 " --vimgrep (consistent output we can parse) is available from version  0.25.0+
 let s:ag_isOld = get(split(system(g:ag_bin.' --version'), "\_s"), 2, '')
       \ =~ '\v0\.%(\d|1\d|2[0-4])%(.\d+)?'
