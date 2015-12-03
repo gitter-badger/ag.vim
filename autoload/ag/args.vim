@@ -8,6 +8,7 @@ function! s:get_vsel(...)
   let [lnum1, col1] = getpos("'<")[1:2]
   let [lnum2, col2] = getpos("'>")[1:2]
   let lines = getline(lnum1, lnum2)
+  " THINK:NEED: different croping for v/V/C-v
   let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
   let lines[0] = lines[0][col1 - 1:]
   return a:0 >= 1 ? join(lines, a:1) : lines
@@ -17,6 +18,8 @@ endfunction
 function! s:derive_args()
   " TODO: for derived always add -Q -- if don't have option 'treat_as_rgx'
   if visualmode() !=# ''
+    " THINK: this vsel disables using ranges?
+    " ADD: -range to commands to use: '<,'>Ag rgx and 11,87Ag rgx
     return s:get_vsel('\n')
   endif
   " TODO: add -w for words
@@ -36,5 +39,6 @@ function! ag#args#bind(func, args, ...)
   " TODO: replace quotes with escaping
   let s:last_func = a:func
   let s:last_args = ['"'.l:args.'"'] + a:000
+  " TODO: split saving last func/args and its actual calling
   call call(s:last_func, s:last_args)
 endfunction
