@@ -2,37 +2,20 @@
 let s:ag_isOld = get(split(system(g:ag_bin.' --version'), "\_s"), 2, '')
       \ =~ '\v0\.%(\d|1\d|2[0-4])%(.\d+)?'
 
-if !exists("g:ag_prg")
-  let g:ag_prg = g:ag_bin . (s:ag_isOld  ? ' --vimgrep' : ' --column')
-endif
+let g:ag_options = extend(get(g:, 'ag_options', {}), {
+  \ 'prg': (g:ag_bin . (s:ag_isOld ? ' --vimgrep' : ' --column')),
+  \        'qhandler': "botright copen",
+  \        'lhandler': "botright lopen",
+  \        'nhandler': "botright new",
+  \ 'apply_qmappings': 1,
+  \ 'apply_lmappings': 1,
+  \ 'mapping_message': 1,
+  \ 'goto_exact_line': 0,
+\})
 
-if !exists("g:ag_apply_qmappings")
-  let g:ag_apply_qmappings=1
-endif
-
-if !exists("g:ag_apply_lmappings")
-  let g:ag_apply_lmappings=1
-endif
-
-if !exists("g:ag_qhandler")
-  let g:ag_qhandler="botright copen"
-endif
-
-if !exists("g:ag_lhandler")
-  let g:ag_lhandler="botright lopen"
-endif
-
-if !exists("g:ag_nhandler")
-  let g:ag_nhandler="botright new"
-endif
-
-if !exists("g:ag_mapping_message")
-  let g:ag_mapping_message=1
-endif
-
-if !exists("g:ag_goto_exact_line")
-  let g:ag_goto_exact_line=0
-endif
+for [k, v] in items(g:ag_options)
+  if !exists('g:ag_'.k) | let g:ag_{k}=v | endif
+endfor
 
 function! ag#AgBuffer(cmd, args)
   let l:bufs = filter(range(1, bufnr('$')), 'buflisted(v:val)')
