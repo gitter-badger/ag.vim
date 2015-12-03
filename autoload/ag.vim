@@ -1,13 +1,11 @@
 " NOTE: You must, of course, install ag / the_silver_searcher
 
-" Location of the ag utility
+" --vimgrep (consistent output we can parse) is available from version  0.25.0+
+let s:ag_isOld = get(split(system(g:ag_bin.' --version'), "\_s"), 2, '')
+      \ =~ '\v0\.%(\d|1\d|2[0-4])%(.\d+)?'
+
 if !exists("g:ag_prg")
-  " --vimgrep (consistent output we can parse) is available from version  0.25.0+
-  if !split(system("ag --version"), "\_s")[2] =~ '\v0\.%(\d|1\d|2[0-4])%(.\d+)?'
-    let g:ag_prg="ag --vimgrep"
-  else
-    let g:ag_prg="ag --column"
-  endif
+  let g:ag_prg = g:ag_bin . (s:ag_isOld  ? ' --vimgrep' : ' --column')
 endif
 
 if !exists("g:ag_apply_qmappings")
