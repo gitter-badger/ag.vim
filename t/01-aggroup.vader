@@ -1,6 +1,5 @@
 
 """ check AgGroup command
-Given (Empty file):
 
 Execute(Find "fuga" inside t/fixture directory):
   :AgGroup fuga fixture
@@ -44,7 +43,3 @@ Expect (match on line 22 and 41):
 
   fixture/sample.vim
   22:33:   echo "a line with percentage %foge"
-
-# As AgGroup open a new buffer, close it
-Execute:
-  :close!
