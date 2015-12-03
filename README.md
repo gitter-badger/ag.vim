@@ -1,5 +1,8 @@
 # ag.vim #
-[![Build Status](https://travis-ci.org/albfan/ag.vim.svg?branch=master)](https://travis-ci.org/albfan/ag.vim)
+[![Build Status](https://travis-ci.org/albfan/ag.vim.svg?branch=master)](
+    https://travis-ci.org/albfan/ag.vim)
+[![Stories in Ready](https://badge.waffle.io/albfan/ag.vim.png?label=ready&title=Ready)](
+    https://waffle.io/albfan/ag.vim)
 
 This plugin is a front for ag, A.K.A.
 [the_silver_searcher](https://github.com/ggreer/the_silver_searcher).  Ag can
@@ -48,7 +51,7 @@ Just like where you use :grep, :grepadd, :lgrep, and :lgrepadd, you can use `:Ag
 
 ## Shell mimic ##
 
-For those who like how ag performs on shell use 
+For those who like how ag performs on shell use
 
     :[N]AgGroup {pattern} [{directory}]
 
