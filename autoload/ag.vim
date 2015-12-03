@@ -1,58 +1,21 @@
-" NOTE: You must, of course, install ag / the_silver_searcher
+" --vimgrep (consistent output we can parse) is available from version  0.25.0+
+let s:ag_isOld = get(split(system(g:ag_bin.' --version'), "\_s"), 2, '')
+      \ =~ '\v0\.%(\d|1\d|2[0-4])%(.\d+)?'
 
-" FIXME: Delete deprecated options below on or after 15-7 (6 months from when they were changed) {{{
+let g:ag_options = extend(get(g:, 'ag_options', {}), {
+  \ 'prg': (g:ag_bin . (s:ag_isOld ? ' --vimgrep' : ' --column')),
+  \        'qhandler': "botright copen",
+  \        'lhandler': "botright lopen",
+  \        'nhandler': "botright new",
+  \ 'apply_qmappings': 1,
+  \ 'apply_lmappings': 1,
+  \ 'mapping_message': 1,
+  \ 'goto_exact_line': 0,
+\})
 
-if exists("g:agprg")
-  let g:ag_prg = g:agprg
-endif
-
-if exists("g:aghighlight")
-  let g:ag_highlight = g:aghighlight
-endif
-
-if exists("g:agformat")
-  let g:ag_format = g:agformat
-endif
-
-" }}} FIXME: Delete the deprecated options above on or after 15-7 (6 months from when they were changed)
-
-" Location of the ag utility
-if !exists("g:ag_prg")
-  " --vimgrep (consistent output we can parse) is available from version  0.25.0+
-  if split(system("ag --version"), "[ \n\r\t]")[2] =~ '\d\+.\(2[5-9]\|[3-9]\d\)\(.\d\+\)\?'
-    let g:ag_prg="ag --vimgrep"
-  else
-    let g:ag_prg="ag --column"
-  endif
-endif
-
-if !exists("g:ag_apply_qmappings")
-  let g:ag_apply_qmappings=1
-endif
-
-if !exists("g:ag_apply_lmappings")
-  let g:ag_apply_lmappings=1
-endif
-
-if !exists("g:ag_qhandler")
-  let g:ag_qhandler="botright copen"
-endif
-
-if !exists("g:ag_lhandler")
-  let g:ag_lhandler="botright lopen"
-endif
-
-if !exists("g:ag_nhandler")
-  let g:ag_nhandler="botright new"
-endif
-
-if !exists("g:ag_mapping_message")
-  let g:ag_mapping_message=1
-endif
-
-if !exists("g:ag_goto_exact_line")
-  let g:ag_goto_exact_line=0
-endif
+for [k, v] in items(g:ag_options)
+  if !exists('g:ag_'.k) | let g:ag_{k}=v | endif
+endfor
 
 function! ag#AgBuffer(cmd, args)
   let l:bufs = filter(range(1, bufnr('$')), 'buflisted(v:val)')
@@ -266,14 +229,6 @@ function! FoldAg()
 endfunction
 
 function! ag#Ag(cmd, args)
-  let l:ag_executable = get(split(g:ag_prg, " "), 0)
-
-  " Ensure that `ag` is installed
-  if !executable(l:ag_executable)
-    echoe "Ag command '" . l:ag_executable . "' was not found. Is the silver searcher installed and on your $PATH?"
-    return
-  endif
-
   " If no pattern is provided, search for the word under the cursor
   if empty(a:args)
     let l:grepargs = expand("<cword>")
