@@ -1,3 +1,8 @@
+" THINK: use list of dicts? To separate flags and regex.
+let s:last_func = ''
+let s:last_args = []
+
+
 function! s:get_vsel(...)
   " DEV:RFC:ADD: 'range' postfix and use a:firstline, etc -- to exec f once?
   let [lnum1, col1] = getpos("'<")[1:2]
@@ -9,7 +14,7 @@ function! s:get_vsel(...)
 endfunction
 
 
-function! ag#args#derive()
+function! s:derive_args()
   " TODO: for derived always add -Q -- if don't have option 'treat_as_rgx'
   if visualmode() !=# ''
     return s:get_vsel('\n')
@@ -24,8 +29,12 @@ endfunction
 
 
 function! ag#args#bind(func, args, ...)
-  let l:args = (empty(a:args) ? ag#args#derive() : a:args)
+  let l:args = (empty(a:args) ? s:derive_args() : a:args)
+  let l:args = substitute(l:args, '%\|#', '\\&', 'g')
   if empty(l:args) | echo "empty search" | return | endif
+
   " TODO: replace quotes with escaping
-  call call(a:func, ['"'.l:args.'"'] + a:000)
+  let s:last_func = a:func
+  let s:last_args = ['"'.l:args.'"'] + a:000
+  call call(s:last_func, s:last_args)
 endfunction

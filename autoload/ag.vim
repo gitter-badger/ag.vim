@@ -69,13 +69,14 @@ endfunction
 let g:last_aggroup=""
 
 function! ag#AgGroupLast(ncontext)
-  call ag#AgGroup(a:ncontext, 0, '', g:last_aggroup)
+  call ag#AgGroup(g:last_aggroup)
 endfunction
 
-function! ag#AgGroup(args, ncontext, ...)
+function! ag#AgGroup(args, ...)
   let l:grepargs = a:args
   let g:last_aggroup = l:grepargs
   let fileregexp = (a:0<1 ? '' : '-G'.a:1)
+  let context = (v:count>0 ? '-C'.v:count : '')
 
   silent! wincmd P
   if !&previewwindow
@@ -90,14 +91,6 @@ function! ag#AgGroup(args, ncontext, ...)
 
   setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted nowrap
 
-  let context = ''
-  if a:ncontext > 0
-    let context = '-C' . a:ncontext
-  endif
-
-
-  let l:grepargs = substitute(l:grepargs, '#', '\\#','g')
-  let l:grepargs = substitute(l:grepargs, '%', '\\%','g')
   "--vimgrep doesn't work well here
   let ag_prg = 'ag'
   execute 'silent read !' . ag_prg . ' -S --group --column ' . context . ' ' . fileregexp . ' ' . l:grepargs
