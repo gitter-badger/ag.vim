@@ -1,9 +1,4 @@
-" THINK: use list of dicts? To separate flags and regex.
-let s:last_func = ''
-let s:last_args = []
-
-
-function! s:get_vsel(...)
+function! ag#args#vsel(...)
   " DEV:RFC:ADD: 'range' postfix and use a:firstline, etc -- to exec f once?
   let [lnum1, col1] = getpos("'<")[1:2]
   let [lnum2, col2] = getpos("'>")[1:2]
@@ -11,34 +6,35 @@ function! s:get_vsel(...)
   " THINK:NEED: different croping for v/V/C-v
   let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
   let lines[0] = lines[0][col1 - 1:]
-  return a:0 >= 1 ? join(lines, a:1) : lines
-endfunction
-
-
-function! s:derive_args()
   " TODO: for derived always add -Q -- if don't have option 'treat_as_rgx'
-  if visualmode() !=# ''
-    " THINK: this vsel disables using ranges?
-    " ADD: -range to commands to use: '<,'>Ag rgx and 11,87Ag rgx
-    return s:get_vsel('\n')
-  endif
-  " TODO: add -w for words
-  let l:args = expand("<cword>")
-  if !empty(l:args)
-    return l:args
-  endif
-  return g:last_aggroup
+  return a:0 >= 1 ? ['-Q', join(lines, a:1)] : lines
 endfunction
 
 
-function! ag#args#bind(func, args, ...)
-  let l:args = (empty(a:args) ? s:derive_args() : a:args)
-  let l:args = substitute(l:args, '%\|#', '\\&', 'g')
-  if empty(l:args) | echo "empty search" | return | endif
+function! ag#args#slash()
+  " TODO:NEED: more perfect vim->perl regex converter
+  let rgx = substitute(getreg('/'), '\(\\<\|\\>\)', '\\b', 'g')
+  return [l:rgx]
+endfunction
 
-  " TODO: replace quotes with escaping
-  let s:last_func = a:func
-  let s:last_args = ['"'.l:args.'"'] + a:000
-  " TODO: split saving last func/args and its actual calling
-  call call(s:last_func, s:last_args)
+
+function! ag#args#cword()
+  return ['-Qw', expand("<cword>")]
+endfunction
+
+
+" THINK: this vsel disables using ranges?
+" ADD: -range to commands to use: '<,'>Ag rgx and 11,87Ag rgx
+function! ag#args#auto(args)
+  if !empty(a:args)
+    if type(a:args)==type([]) | return a:args | endif
+    if type(a:args)==type('') && exists('*ag#args#'.a:args)
+      return ag#args#{a:args}()
+    endif
+  endif
+  echo 'E' a:args
+  return (
+    \ (visualmode() !=# '')      ?  ag#args#vsel('\n') :
+    \ !empty(expand("<cword>"))  ?  ag#args#cword()    :
+    \   g:ag_last.args)
 endfunction

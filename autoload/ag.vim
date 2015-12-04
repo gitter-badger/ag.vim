@@ -2,6 +2,7 @@
 let s:ag_isOld = get(split(system(g:ag_bin.' --version'), "\_s"), 2, '')
       \ =~ '\v0\.%(\d|1\d|2[0-4])%(.\d+)?'
 
+" NOTE: 'g:ag_last' can be used to setup 'default' pattern to search on vim start
 let g:ag_options = extend(get(g:, 'ag_options', {}), {
   \ 'prg': (g:ag_bin . (s:ag_isOld ? ' --vimgrep' : ' --column')),
   \        'qhandler': "botright copen",
@@ -11,23 +12,18 @@ let g:ag_options = extend(get(g:, 'ag_options', {}), {
   \ 'apply_lmappings': 1,
   \ 'mapping_message': 1,
   \ 'goto_exact_line': 0,
+  \ 'last': {},
 \})
 
 for [k, v] in items(g:ag_options)
   if !exists('g:ag_'.k) | let g:ag_{k}=v | endif
 endfor
 
-function! ag#AgBuffer(cmd, args)
-  let l:bufs = filter(range(1, bufnr('$')), 'buflisted(v:val)')
-  let l:files = []
-  for buf in l:bufs
-    let l:file = fnamemodify(bufname(buf), ':p')
-    if !isdirectory(l:file)
-      call add(l:files, l:file)
-    endif
-  endfor
-  call ag#Ag(a:cmd, a:args . ' ' . join(l:files, ' '))
+
+function! ag#LAg(args, cmd)
+  call ag#Ag(a:args, 'l'.cmd)
 endfunction
+
 
 let g:last_aggroup=""
 
@@ -228,13 +224,8 @@ function! FoldAg()
   return '0'
 endfunction
 
-function! ag#Ag(cmd, args)
-  " If no pattern is provided, search for the word under the cursor
-  if empty(a:args)
-    let l:grepargs = expand("<cword>")
-  else
-    let l:grepargs = a:args
-  end
+function! ag#Ag(args, cmd)
+  let l:grepargs = a:args
 
   " Format, used to manage column jump
   if a:cmd =~# '-g$'
@@ -318,27 +309,4 @@ function! ag#Ag(cmd, args)
   else
     echom 'No matches for "'.a:args.'"'
   endif
-endfunction
-
-function! ag#AgFromSearch(cmd, args)
-  let search =  getreg('/')
-  " translate vim regular expression to perl regular expression.
-  let search = substitute(search,'\(\\<\|\\>\)','\\b','g')
-  call ag#Ag(a:cmd, '"' .  search .'" '. a:args)
-endfunction
-
-function! ag#GetDocLocations()
-  let dp = ''
-  for p in split(&runtimepath,',')
-    let p = p.'/doc/'
-    if isdirectory(p)
-      let dp = p.'*.txt '.dp
-    endif
-  endfor
-  return dp
-endfunction
-
-function! ag#AgHelp(cmd,args)
-  let args = a:args.' '.ag#GetDocLocations()
-  call ag#Ag(a:cmd,args)
 endfunction

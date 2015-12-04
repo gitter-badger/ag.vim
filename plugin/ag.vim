@@ -9,23 +9,27 @@ if !executable(g:ag_bin)
   finish
 endif
 
+function! s:cdef(nm, sarg)
+  exec 'command! -bang -nargs=* -complete=file '.a:nm
+      \.' call ag#bind#dispatch('.a:sarg.')'
+endfunction
 
-" NOTE: You must, of course, install ag / the_silver_searcher
-command! -bang -nargs=* -complete=file Ag call ag#Ag('grep<bang>',<q-args>)
-command! -bang -nargs=* -complete=file AgAdd call ag#Ag('grepadd<bang>', <q-args>)
-command! -bang -nargs=* -complete=file AgBuffer call ag#AgBuffer('grep<bang>',<q-args>)
-command! -bang -nargs=* -complete=file AgFromSearch call ag#AgFromSearch('grep<bang>', <q-args>)
-command! -bang -nargs=* -complete=file AgFile call ag#Ag('grep<bang> -g', <q-args>)
-command! -bang -nargs=* -complete=help AgHelp call ag#AgHelp('grep<bang>',<q-args>)
+" FIX: for file -- move flag [-g] from cmd to args field
+for f in ['Ag', 'LAg']
+  call s:cdef(f.''      , "'".f."', [<f-args>], []       , 'grep<bang>'")
+  call s:cdef(f.'Add'   , "'".f."', [<f-args>], []       , 'grepadd<bang>'")
+  call s:cdef(f.'Buffer', "'".f."', [<f-args>], 'buffers', 'grep<bang>'")
+  call s:cdef(f.'Search', "'".f."', 'slash' , [<f-args>] , 'grep<bang>'")
+  call s:cdef(f.'File'  , "'".f."', [<f-args>], []       , 'grep<bang> -g'")
+  call s:cdef(f.'Help'  , "'".f."', [<f-args>], 'help'   , 'grep<bang>'")
+endfor
 
-command! -bang -nargs=* -complete=file LAg call ag#Ag('lgrep<bang>', <q-args>)
-command! -bang -nargs=* -complete=file LAgAdd call ag#Ag('lgrepadd<bang>', <q-args>)
-command! -bang -nargs=* -complete=file LAgBuffer call ag#AgBuffer('lgrep<bang>',<q-args>)
-command! -bang -nargs=* -complete=help LAgHelp call ag#AgHelp('lgrep<bang>',<q-args>)
-
-command! -count -nargs=*               AgGroup call ag#args#bind('ag#AgGroup', <q-args>)
-command! -count -nargs=*               AgGroupFile call ag#AgGroup(<f-args>)
-command! -count                        AgGroupLast call ag#AgGroupLast(<count>)
+let s:f = 'AgGroup'
+call s:cdef(s:f.''      , "'".s:f."', [<f-args>], [], 'grep<bang>'")
+call s:cdef(s:f.'File'  , "'".s:f."', [<f-args>], [], 'grep<bang> -g'")
+unlet s:f
+command! -count  AgGroupLast
+    \ call ag#AgGroupLast(<count>)
 
 
 nnoremap <silent> <Plug>(ag-group)  :call ag#AgGroup(v:count, 0, '', '')<CR>
